@@ -3,23 +3,8 @@
  */
  
 #include "WProgram.h"
+#include "DynamicMemory.h"
 #include "LedArray.h"
-
-void *operator new(size_t size) {
-  return malloc(size);
-}
-
-void operator delete(void *ptr) {
-  free(ptr);
-}
-
-void *operator new[](size_t size) {
-    return malloc(size);
-}
-
-void operator delete[](void *ptr) {
-    free(ptr);
-}
 
 LedState::LedState() {
   this->pin = -1;
@@ -36,7 +21,10 @@ LedArray::LedArray(unsigned char ledCount, unsigned long cycleDurationMicros) {
   this->cycleDurationMicros = cycleDurationMicros;
   this->previousTime = 0;
   this->ledState = new LedState[ledCount];
-  this->counter = 0;
+}
+
+LedArray::~LedArray() {
+	delete[] this->ledState;
 }
 
 void LedArray::setLedPin(unsigned char index, char pin) {
@@ -61,8 +49,8 @@ void LedArray::setLedBrightness(unsigned char index, unsigned short brightness) 
   ledState[index].brightness = brightness;
 }
 
-void LedArray::increaseLedBrightness(unsigned char index, short brightness) {
-  short newBrightness = (short) ledState[index].brightness + brightness;
+void LedArray::setRelativeLedBrightness(unsigned char index, short relativeBrightness) {
+  short newBrightness = (short) ledState[index].brightness + relativeBrightness;
   if (newBrightness > (short) cycleDurationMicros) {
     newBrightness = (short) cycleDurationMicros;
   }
@@ -100,7 +88,11 @@ void LedArray::update(unsigned long time) {
     }
 
     if (cycleBegins) {
-      digitalWrite(state->pin, HIGH);
+	  if (state->brightness > 0) {
+		digitalWrite(state->pin, HIGH);
+	  } else {
+		digitalWrite(state->pin, LOW);
+	  }
       continue;
     }
 
