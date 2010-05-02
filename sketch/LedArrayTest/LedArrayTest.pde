@@ -3,6 +3,41 @@
 #include "EventPlayer.h"
 #include "LedArrayEvent.h"
 
+/*
+	Serial protocol commands:
+
+	LEDARRAY <ledCount>,<ledCycleDurationMicros>
+		ledCount = integer
+		ledCycleDurationMicros = PWM cycle duration in microseconds (has to be >= 500 µs)
+	LEDPIN <ledIndex>,<pinNumber>
+		ledIndex = ID number of LED starting from zero
+		pinNumber = Arduino hardware pin number of LED starting from zero
+	EVENTPLAYER <eventCount>,<continuousEventCount>
+		eventCount = maximum number of events in player buffer
+		continuousEventCount = maximum number of simultaneous fade (= continuous) events
+		  (usually the same as ledCount)
+	EVENT <type>,<startTimeMillis>,...
+		startTimeMillis = start time in milliseconds for the event relative
+		  to the start time of event player
+		type = SET, SETRELATIVE, FADE, FADERELATIVE
+		
+		EVENT SET,<startTimeMillis>,<ledIndex>,<brightness>
+			brightness = time of the PWM cycle in microseconds the LED is on
+			  (0 = constantly off, <ledCycleDurationMicros> = constantly on)
+		EVENT SETREL,<startTimeMillis>,<ledIndex>,<relativeBrightness>
+			brightness = time of the PWM cycle in microseconds the LED is on
+			  -- the value is added to the current brightness (can be negative)
+			  (0 = constantly off, <ledCycleDurationMicros> = constantly on)
+		EVENT FADE,<startTimeMillis>,<lengthMillis>,<ledIndex>,<fromBrightness>,<toBrightness>
+			lengthMillis = length of fade in milliseconds
+			fromBrightness = start fade with this brightness level
+			toBrightness = end fade with this brightness level
+		EVENT FADETO,<startTimeMillis>,<lengthMillis>,<ledIndex>,<toBrightness>
+			toBrightness = end fade with this brightness level, start from current brightness
+		EVENT FADEREL,<startTimeMillis>,<lengthMillis>,<ledIndex>,<relativeBrightness>
+			relativeBrightness = end fade with this brightness level
+*/
+
 #define LED_ARRAY_SIZE                   4
 #define LED_CYCLE_DURATION_MICROS        ((unsigned long) 4000)
 
