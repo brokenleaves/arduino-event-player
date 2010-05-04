@@ -29,22 +29,22 @@ class ContinuousEvent : public Event {
 		ContinuousEvent(unsigned long timeMillis, unsigned long lengthMillis);
 		unsigned long getLength();
 		unsigned long getEndTime();
+		virtual void init(unsigned long playerTimeMillis);
 	protected:
 		unsigned long lengthMillis;
-		unsigned long endTimeMillis;
 };
 
 class JumpEvent : public Event {
 	public:
-		JumpEvent(unsigned long timeMillis, unsigned short eventIndex, unsigned short loopCount);
+		JumpEvent(unsigned long timeMillis, unsigned short eventIndex, unsigned char loopCount);
 		unsigned short getEventIndex();
-		unsigned short getLoopCount();
-		unsigned short getLoopsExecuted();
-		void setLoopsExecuted(unsigned short loopsExecuted);
+		unsigned char getLoopCount();
+		unsigned char getLoopsExecuted();
+		void setLoopsExecuted(unsigned char loopsExecuted);
 	protected:
 		unsigned short eventIndex;
-		unsigned short loopCount;
-		unsigned short loopsExecuted;
+		unsigned char loopCount;
+		unsigned char loopsExecuted;
 };
 
 class EventPlayer {
@@ -62,7 +62,7 @@ class EventPlayer {
 		unsigned short currentEventIndex;
 		unsigned long startTimeMicros;
 		Event **events;
-		Event **continuousEvents;
+		ContinuousEvent **continuousEvents;
 };
 
 #endif

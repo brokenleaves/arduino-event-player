@@ -5,26 +5,41 @@
 #include "WProgram.h"
 #include "LedArrayEvent.h"
 
+#define calculateBrightness(fromBrightness, toBrightness, eventTimeElapsed, lengthMillis) \
+	(((fromBrightness) < (toBrightness)) ?				\
+		(((fromBrightness) + ((((eventTimeElapsed) * 1000) / (lengthMillis)) * ((toBrightness) - (fromBrightness))) / 1000)) : \
+		(((fromBrightness) - ((((eventTimeElapsed) * 1000) / (lengthMillis)) * ((fromBrightness) - (toBrightness))) / 1000)))
+
 void SetLedBrightnessEvent::run(unsigned long playerTimeMillis) {
-	ledArray->setLedBrightness(ledIndex, brightness);
+	LedArrayConfig::ledArray->setLedBrightness(ledIndex, brightness);
 }
 
 void SetRelativeLedBrightnessEvent::run(unsigned long playerTimeMillis) {
-	ledArray->setRelativeLedBrightness(ledIndex, relativeBrightness);
+	LedArrayConfig::ledArray->setRelativeLedBrightness(ledIndex, relativeBrightness);
 }
 
 void FadeLedBrightnessEvent::run(unsigned long playerTimeMillis) {
-	unsigned long eventTimeElapsed = playerTimeMillis - timeMillis;
-	unsigned long brightnessDiff;
-	unsigned long brightness;
+	LedArrayConfig::ledArray->setLedBrightness(ledIndex,
+		calculateBrightness(fromBrightness, toBrightness, playerTimeMillis - timeMillis, lengthMillis));
+}
 
-	if (fromBrightness < toBrightness) {
-		brightnessDiff = toBrightness - fromBrightness;
-		brightness = fromBrightness + (((eventTimeElapsed * 1000) / lengthMillis) * brightnessDiff) / 1000;
-	} else {
-		brightnessDiff = fromBrightness - toBrightness;
-		brightness = fromBrightness - (((eventTimeElapsed * 1000) / lengthMillis) * brightnessDiff) / 1000;
-	}
+void FadeToLedBrightnessEvent::init(unsigned long playerTimeMillis) {
+	LedArrayConfig::ledArray->storeLedBrightness(ledIndex);
+}
 
-	ledArray->setLedBrightness(ledIndex, brightness);
+void FadeToLedBrightnessEvent::run(unsigned long playerTimeMillis) {
+	unsigned long fromBrightness = LedArrayConfig::ledArray->getStoredLedBrightness(ledIndex);
+	LedArrayConfig::ledArray->setLedBrightness(ledIndex,
+		calculateBrightness(fromBrightness, toBrightness, playerTimeMillis - timeMillis, lengthMillis));
+}
+
+void FadeRelativeLedBrightnessEvent::init(unsigned long playerTimeMillis) {
+	LedArrayConfig::ledArray->storeLedBrightness(ledIndex);
+}
+
+void FadeRelativeLedBrightnessEvent::run(unsigned long playerTimeMillis) {
+	unsigned long fromBrightness = LedArrayConfig::ledArray->getStoredLedBrightness(ledIndex);
+	unsigned long toBrightness = fromBrightness + toRelativeBrightness;
+	LedArrayConfig::ledArray->setLedBrightness(ledIndex,
+		calculateBrightness(fromBrightness, toBrightness, playerTimeMillis - timeMillis, lengthMillis));
 }

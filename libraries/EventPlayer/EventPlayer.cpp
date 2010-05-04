@@ -28,7 +28,10 @@ OnetimeEvent::OnetimeEvent(unsigned long timeMillis) : Event(ONETIME, timeMillis
 
 ContinuousEvent::ContinuousEvent(unsigned long timeMillis, unsigned long lengthMillis) : Event(CONTINUOUS, timeMillis) {
 	this->lengthMillis = lengthMillis;
-	this->endTimeMillis = timeMillis + lengthMillis;
+}
+
+void ContinuousEvent::init(unsigned long playerTimeMillis) {
+	// empty
 }
 
 unsigned long ContinuousEvent::getLength() {
@@ -36,10 +39,10 @@ unsigned long ContinuousEvent::getLength() {
 }
 
 unsigned long ContinuousEvent::getEndTime() {
-	return endTimeMillis;
+	return timeMillis + lengthMillis;
 }
 
-JumpEvent::JumpEvent(unsigned long timeMillis, unsigned short eventIndex, unsigned short loopCount) : Event(JUMP, timeMillis) {
+JumpEvent::JumpEvent(unsigned long timeMillis, unsigned short eventIndex, unsigned char loopCount) : Event(JUMP, timeMillis) {
 	this->eventIndex = eventIndex;
 	this->loopCount = loopCount;
 	this->loopsExecuted = 0;
@@ -49,15 +52,15 @@ unsigned short JumpEvent::getEventIndex() {
 	return eventIndex;
 }
 
-unsigned short JumpEvent::getLoopCount() {
+unsigned char JumpEvent::getLoopCount() {
 	return loopCount;
 }
 
-unsigned short JumpEvent::getLoopsExecuted() {
+unsigned char JumpEvent::getLoopsExecuted() {
 	return loopsExecuted;
 }
 
-void JumpEvent::setLoopsExecuted(unsigned short loopsExecuted) {
+void JumpEvent::setLoopsExecuted(unsigned char loopsExecuted) {
 	this->loopsExecuted = loopsExecuted;
 }
 
@@ -67,7 +70,7 @@ EventPlayer::EventPlayer(unsigned short maxEventCount, unsigned char maxContinuo
 	this->currentEventIndex = 0;
 	this->firstFreeEventIndex = 0;
 	this->events = new Event*[maxEventCount];
-	this->continuousEvents = new Event*[maxContinuousEventCount];
+	this->continuousEvents = new ContinuousEvent*[maxContinuousEventCount];
 	for (unsigned char i = 0; i < maxContinuousEventCount; i++) {
 		this->continuousEvents[i] = NULL;
 	}
@@ -107,9 +110,9 @@ void EventPlayer::run(unsigned long timeMicros) {
 					break;
 				}
 
-				unsigned short loopCount = jumpEvent->getLoopCount();
+				unsigned char loopCount = jumpEvent->getLoopCount();
 				if (loopCount > 0) {
-					unsigned short loopsExecuted = jumpEvent->getLoopsExecuted();
+					unsigned char loopsExecuted = jumpEvent->getLoopsExecuted();
 					if (loopsExecuted >= loopCount) {
 						continue;
 					}
@@ -120,21 +123,19 @@ void EventPlayer::run(unsigned long timeMicros) {
 
 				currentEventIndex = newCurrentEventIndex;
 				currentEvent = events[currentEventIndex];
-				startTimeMicros = timeMicros - (currentEvent->getTime() * 1000);
+				startTimeMicros = startTimeMicros + (jumpEvent->getTime() * 1000);
 				playerTimeMicros = timeMicros - startTimeMicros;
 				playerTimeMillis = playerTimeMicros / 1000;
 
-				Serial.print("JUMP: currentEventIndex: ");
-				Serial.print(currentEventIndex, DEC);
-				Serial.print(" startTimeMicros: ");
-				Serial.println(startTimeMicros, DEC);
 				continue;
 			} else if (type == CONTINUOUS) {
 				// Add to list of continuous events
 				for (unsigned char i = 0; i < maxContinuousEventCount; i++) {
 					if (continuousEvents[i] == NULL) {
 						// A free slot for the continuous event was found
-						continuousEvents[i] = currentEvent;
+						continuousEvents[i] = (ContinuousEvent *) currentEvent;
+						// Initialize event
+						continuousEvents[i]->init(playerTimeMillis);
 						break;
 					}
 				}
@@ -152,7 +153,7 @@ void EventPlayer::run(unsigned long timeMicros) {
 
 	// Execute all continuous events
 	for (unsigned char i = 0; i < maxContinuousEventCount; i++) {
-		ContinuousEvent *event = (ContinuousEvent *) continuousEvents[i];
+		ContinuousEvent *event = continuousEvents[i];
 		if (event != NULL) {
 			long endTimeMillis = event->getEndTime();
 			if (endTimeMillis <= playerTimeMillis) {

@@ -6,6 +6,8 @@
 #include "DynamicMemory.h"
 #include "LedArray.h"
 
+LedArray *LedArrayConfig::ledArray;
+
 LedState::LedState() {
   this->pin = -1;
   this->brightness = 0;
@@ -70,6 +72,21 @@ boolean LedArray::hasLedMaxBrightness(unsigned char index) {
 
 boolean LedArray::hasLedMinBrightness(unsigned char index) {
   return (ledState[index].brightness <= 0);
+}
+
+void LedArray::storeLedBrightness(unsigned char index) {
+  ledState[index].storedBrightness = ledState[index].brightness;
+}
+
+void LedArray::setStoredLedBrightness(unsigned char index, unsigned short brightness) {
+  if (brightness > cycleDurationMicros) {
+    brightness = cycleDurationMicros;
+  }
+  ledState[index].storedBrightness = brightness;
+}
+
+unsigned short LedArray::getStoredLedBrightness(unsigned char index) {
+  return ledState[index].storedBrightness;
 }
 
 void LedArray::update(unsigned long time) {
