@@ -36,13 +36,16 @@ class ContinuousEvent : public Event {
 
 class JumpEvent : public Event {
 	public:
-		JumpEvent(unsigned long timeMillis, unsigned short eventIndex, unsigned char loopCount);
-		unsigned short getEventIndex();
+		JumpEvent(unsigned long timeMillis, short eventIndex, unsigned char loopCount);
+		JumpEvent(unsigned long timeMillis, short eventIndex, unsigned char loopCount, boolean absolute);
+		boolean isAbsolute();
+		short getEventIndex();
 		unsigned char getLoopCount();
 		unsigned char getLoopsExecuted();
 		void setLoopsExecuted(unsigned char loopsExecuted);
 	protected:
-		unsigned short eventIndex;
+		boolean absolute;
+		short eventIndex;
 		unsigned char loopCount;
 		unsigned char loopsExecuted;
 };

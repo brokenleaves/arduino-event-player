@@ -15,7 +15,8 @@ class LedState {
 class LedArray {
   public:
     LedArray(unsigned char ledCount, unsigned long cycleDurationMicros);
-	~LedArray();
+    ~LedArray();
+    unsigned char getLedCount();
     void setLedPin(unsigned char index, char pin);
     void disableLed(unsigned char index);
     void setLedBrightness(unsigned char index, unsigned short brightness);

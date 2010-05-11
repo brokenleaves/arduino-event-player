@@ -42,13 +42,25 @@ unsigned long ContinuousEvent::getEndTime() {
 	return timeMillis + lengthMillis;
 }
 
-JumpEvent::JumpEvent(unsigned long timeMillis, unsigned short eventIndex, unsigned char loopCount) : Event(JUMP, timeMillis) {
+JumpEvent::JumpEvent(unsigned long timeMillis, short eventIndex, unsigned char loopCount) : Event(JUMP, timeMillis) {
+	this->absolute = false;
 	this->eventIndex = eventIndex;
 	this->loopCount = loopCount;
 	this->loopsExecuted = 0;
 }
 
-unsigned short JumpEvent::getEventIndex() {
+JumpEvent::JumpEvent(unsigned long timeMillis, short eventIndex, unsigned char loopCount, boolean absolute) : Event(JUMP, timeMillis) {
+	this->absolute = absolute;
+	this->eventIndex = eventIndex;
+	this->loopCount = loopCount;
+	this->loopsExecuted = 0;
+}
+
+boolean JumpEvent::isAbsolute() {
+	return absolute;
+}
+
+short JumpEvent::getEventIndex() {
 	return eventIndex;
 }
 
@@ -105,7 +117,12 @@ void EventPlayer::run(unsigned long timeMicros) {
 			if (type == JUMP) {
 				JumpEvent *jumpEvent = (JumpEvent *) currentEvent;
 
-				unsigned short newCurrentEventIndex = jumpEvent->getEventIndex();
+				unsigned short newCurrentEventIndex;
+				if (jumpEvent->isAbsolute()) {
+					newCurrentEventIndex = jumpEvent->getEventIndex();
+				} else {
+					newCurrentEventIndex = currentEventIndex + jumpEvent->getEventIndex();
+				}
 				if (newCurrentEventIndex >= firstFreeEventIndex) {
 					break;
 				}

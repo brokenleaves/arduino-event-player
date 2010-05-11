@@ -29,6 +29,10 @@ LedArray::~LedArray() {
 	delete[] this->ledState;
 }
 
+unsigned char LedArray::getLedCount() {
+	return this->ledCount;
+}
+
 void LedArray::setLedPin(unsigned char index, char pin) {
   pinMode(pin, OUTPUT);
   ledState[index].pin = pin;
